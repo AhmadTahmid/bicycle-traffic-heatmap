@@ -60,45 +60,45 @@
         }
 
         function updateHeatmap(hour) {
-            if (heatLayer) {
-                map.removeLayer(heatLayer);
-            }
+    if (heatLayer) {
+        map.removeLayer(heatLayer);
+    }
 
-            let heatData = trafficData.map(entry => {
-                let time = new Date(entry["Data"]);
-                let entryHour = time.getHours();
-                if (entryHour === hour && entry["Geo Point"]) {
-                    let [lat, lon] = entry["Geo Point"].split(", ").map(Number);
-                    let count = parseFloat(entry["Totale"]) || 0;
-                    if (!isNaN(lat) && !isNaN(lon) && !isNaN(count)) {
-                        return [lat, lon, count];
-                    }
-                }
-                return null;
-            }).filter(point => point !== null);
+    let heatData = trafficData.map(entry => {
+        // Log each entry to check if "Data" and "Geo Point" exist
+        console.log("Entry:", entry);
+        let time = new Date(entry["Data"]);
+        let entryHour = time.getHours();
+        console.log("Parsed hour:", entryHour, "for data:", entry["Data"]);
 
-            console.log(`Heatmap data for hour ${hour}, first 5 points:`, heatData.slice(0, 5));
-            console.log(`Number of valid data points:`, heatData.length);
-
-            if (heatData.length > 0) {
-                heatLayer = L.heatLayer(heatData, {
-                    radius: 25,
-                    blur: 15,
-                    maxZoom: 17,
-                    max: Math.max(...heatData.map(d => d[2])),
-                    gradient: {0.4: 'blue', 0.65: 'lime', 1: 'red'}
-                }).addTo(map);
-            } else {
-                console.error("No valid data points for heatmap");
-                document.getElementById('error-message').innerText = "No valid data points for heatmap";
+        if (entryHour === hour && entry["Geo Point"]) {
+            let [lat, lon] = entry["Geo Point"].split(", ").map(Number);
+            console.log("Parsed coordinates:", lat, lon);
+            let count = parseFloat(entry["Totale"]) || 0;
+            if (!isNaN(lat) && !isNaN(lon) && !isNaN(count)) {
+                return [lat, lon, count];
             }
         }
+        return null;
+    }).filter(point => point !== null);
 
-        document.getElementById('time-slider').addEventListener('input', function(e) {
-            let hour = parseInt(e.target.value);
-            updateHeatmap(hour);
-            document.getElementById('time-display').textContent = `${hour.toString().padStart(2, '0')}:00`;
-        });
+    console.log(`Heatmap data for hour ${hour}, first 5 points:`, heatData.slice(0, 5));
+    console.log(`Number of valid data points:`, heatData.length);
+
+    if (heatData.length > 0) {
+        heatLayer = L.heatLayer(heatData, {
+            radius: 25,
+            blur: 15,
+            maxZoom: 17,
+            max: Math.max(...heatData.map(d => d[2])),
+            gradient: {0.4: 'blue', 0.65: 'lime', 1: 'red'}
+        }).addTo(map);
+    } else {
+        console.error("No valid data points for heatmap");
+        document.getElementById('error-message').innerText = "No valid data points for heatmap";
+    }
+}
+
 
         loadCSVData();
     } catch (error) {
