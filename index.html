@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bologna Bicycle Traffic Heatmap - 24 Hour View</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.0/papaparse.min.js"></script> <!-- Added PapaParse -->
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
         h1 { text-align: center; }
@@ -28,6 +25,9 @@
     <div id="loading">Loading data...</div>
     <div id="error-message"></div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.0/papaparse.min.js"></script>
     <script>
     try {
         let map = L.map('map').setView([44.4949, 11.3426], 13);
@@ -45,10 +45,11 @@
             Papa.parse('https://raw.githubusercontent.com/AhmadTahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.csv', {
                 download: true,
                 header: true,
+                delimiter: ';',
                 complete: function(results) {
                     trafficData = results.data;
                     console.log("Data loaded, first 5 entries:", trafficData.slice(0, 5));
-                    updateHeatmap(12);
+                    updateHeatmap(12);  // Load heatmap for hour 12 as default
                     document.getElementById('loading').style.display = 'none';
                 },
                 error: function(error) {
@@ -67,8 +68,6 @@
             let heatData = trafficData.map(entry => {
                 let time = new Date(entry["Data"]);
                 let entryHour = time.getHours();
-                console.log("Parsed hour:", entryHour, "for data:", entry["Data"]);
-
                 if (entryHour === hour && entry["Geo Point"]) {
                     let [lat, lon] = entry["Geo Point"].split(", ").map(Number);
                     let count = parseFloat(entry["Totale"]) || 0;
