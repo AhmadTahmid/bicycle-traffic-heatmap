@@ -36,26 +36,21 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        function loadJSONData() {
-            fetch('https://raw.githubusercontent.com/AhmadTahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.json')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log("Data loaded:", data.slice(0, 5)); // Log first 5 entries
-                    trafficData = data;
-                    updateHeatmap(12);
-                    document.getElementById('loading').style.display = 'none';
-                })
-                .catch(error => {
-                    console.error('Error loading or parsing JSON:', error);
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('error-message').innerText = `Error loading data: ${error.message}. Please check the console for more details.`;
-                });
-        }
+       function loadJSONData() {
+    fetch('https://media.githubusercontent.com/media/AhmadTahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.json')
+        .then(response => response.json())
+        .then(data => {
+            console.log("Data loaded:", data.slice(0, 5)); // Log first 5 entries
+            trafficData = data;
+            updateHeatmap(12);
+            document.getElementById('loading').style.display = 'none';
+        })
+        .catch(error => {
+            console.error('Error loading or parsing JSON:', error);
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error-message').innerText = `Error loading data: ${error.message}. Please check the console for more details.`;
+        });
+}
 
         function updateHeatmap(hour) {
             if (heatLayer) {
