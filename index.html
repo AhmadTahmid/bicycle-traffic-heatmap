@@ -3,63 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bicycle Traffic Heatmap - Bologna</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <script src="https://unpkg.com/papaparse@5.3.0/papaparse.min.js"></script>
+    <title>Bologna Bicycle Traffic Heatmap - 24 Hour View (Debug)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
     <style>
-        #map {
-            height: 600px;
-            width: 100%;
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        h1 { text-align: center; }
+        #map { height: 500px; width: 100%; margin-top: 20px; }
+        #slider-container { width: 100%; text-align: center; margin-top: 20px; }
+        #time-slider { width: 80%; }
+        #time-display { font-size: 1.2em; margin-top: 10px; }
+        #loading, #error-message { text-align: center; margin-top: 10px; color: red; }
     </style>
 </head>
 <body>
-    <h1>Bicycle Traffic Heatmap - Bologna</h1>
+    <h1>Bologna Bicycle Traffic Heatmap - 24 Hour View (Debug)</h1>
     <div id="map"></div>
+    <div id="slider-container">
+        <input type="range" id="time-slider" min="0" max="23" value="12" step="1">
+        <div id="time-display">12:00</div>
+    </div>
+    <div id="loading">Loading data...</div>
+    <div id="error-message"></div>
 
-    <!-- Leaflet.js -->
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <!-- Heatmap plugin for Leaflet -->
-    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
     <script>
-        // Initialize the map centered on Bologna
-        var map = L.map('map').setView([44.4949, 11.3426], 13);  // Bologna coordinates
+        let map = L.map('map').setView([44.4949, 11.3426], 13);
+        let heatLayer;
+        let trafficData = [];
 
-        // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // Function to load CSV and create heatmap
-        function loadCSVData() {
-            Papa.parse('https://raw.githubusercontent.com/ahmadtahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.csv', {
-    download: true,
-    header: true,
-    complete: function(results) {
-        console.log(results.data);  // Check if the CSV data is loading
-        var heatData = [];
+        function loadJSONData() {
+            fetch('https://raw.githubusercontent.com/AhmadTahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Data loaded:", data.slice(0, 5)); // Log first 5 entries
+                    trafficData = data;
+                    updateHeatmap(12);
+                    document.getElementById('loading').style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error loading or parsing JSON:', error);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error-message').innerText = `Error loading data: ${error.message}. Please check the console for more details.`;
+                });
+        }
 
-        results.data.forEach(function(row) {
-            var lat = parseFloat(row['Latitude']);
-            var lon = parseFloat(row['Longitude']);
-            var count = parseFloat(row['Totale']);
-
-            if (!isNaN(lat) && !isNaN(lon) && !isNaN(count)) {
-                heatData.push([lat, lon, count]);
+        function updateHeatmap(hour) {
+            if (heatLayer) {
+                map.removeLayer(heatLayer);
             }
+
+            let heatData = trafficData.map(entry => {
+                let [lat, lon] = entry["Geo Point"].split(", ").map(Number);
+                let count = parseFloat(entry[`h${hour.toString().padStart(2, '0')}`]) || 0;
+                return [lat, lon, count];
+            });
+
+            console.log(`Heatmap data for hour ${hour}:`, heatData.slice(0, 5));
+            console.log(`Max intensity:`, Math.max(...heatData.map(d => d[2])));
+
+            heatLayer = L.heatLayer(heatData, {
+                radius: 25,
+                blur: 15,
+                maxZoom: 17,
+                max: Math.max(...heatData.map(d => d[2])),
+                gradient: {0.4: 'blue', 0.65: 'lime', 1: 'red'}
+            }).addTo(map);
+        }
+
+        document.getElementById('time-slider').addEventListener('input', function(e) {
+            let hour = parseInt(e.target.value);
+            updateHeatmap(hour);
+            document.getElementById('time-display').textContent = `${hour.toString().padStart(2, '0')}:00`;
         });
 
-        L.heatLayer(heatData, {radius: 25}).addTo(map);
-    },
-    error: function(err) {
-        console.log("Error loading or parsing CSV: ", err);  // Log any CSV loading errors
-    }
-});
-
-
-        // Call the function to load the CSV and generate the heatmap
-        loadCSVData();
+        loadJSONData();
     </script>
 </body>
 </html>
