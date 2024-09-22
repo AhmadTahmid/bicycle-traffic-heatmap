@@ -3,65 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bicycle Traffic Heatmap - Bologna</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <title>Bologna Bicycle Traffic Heatmap - 24 Hour View</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
     <style>
-        #map {
-            height: 600px;
-            width: 100%;
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        h1 { text-align: center; }
+        #map { height: 500px; width: 100%; margin-top: 20px; }
+        #slider-container { 
+            width: 100%; 
+            text-align: center; 
+            margin-top: 20px; 
         }
+        #time-slider { width: 80%; }
+        #time-display { 
+            font-size: 1.2em; 
+            margin-top: 10px; 
+        }
+        #loading { text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <h1>Bicycle Traffic Heatmap - Bologna</h1>
+    <h1>Bologna Bicycle Traffic Heatmap - 24 Hour View</h1>
     <div id="map"></div>
+    <div id="slider-container">
+        <input type="range" id="time-slider" min="0" max="23" value="12" step="1">
+        <div id="time-display">12:00</div>
+    </div>
+    <div id="loading">Loading data...</div>
 
-    <!-- Include Leaflet.js -->
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <!-- Include the heatmap plugin for Leaflet -->
-    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
     <script>
-        // Initialize the map centered on Bologna
-        var map = L.map('map').setView([44.4949, 11.3426], 13);  // Bologna coordinates
+        let map = L.map('map').setView([44.4949, 11.3426], 13);
+        let heatLayer;
+        let trafficData = [];
 
-        // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // Function to load JSON data and create heatmap
         function loadJSONData() {
-            fetch('https://raw.githubusercontent.com/AhmadTahmid/bicycle-traffic-data/main/colonnine-conta-bici.json')
+            fetch('https://ahmadtahmid.github.io/bicycle-traffic-heatmap/colonnine-conta-bici.json')
                 .then(response => response.json())
                 .then(data => {
-                    var heatData = [];
-
-                    // Loop through the JSON data
-                    data.forEach(function(entry) {
-                        var geoPoint = entry["Geo Point"];  // Access the Geo Point
-                        var totalCount = parseFloat(entry["Totale"]);  // Access the bicycle count
-
-                        // Split Geo Point into latitude and longitude
-                        var [lat, lon] = geoPoint.split(", ").map(Number);
-
-                        if (!isNaN(lat) && !isNaN(lon) && !isNaN(totalCount)) {
-                            heatData.push([lat, lon, totalCount]);
-                        }
-                    });
-
-                    // Add the heatmap layer with the data
-                    L.heatLayer(heatData, {radius: 25}).addTo(map);
+                    trafficData = data;
+                    updateHeatmap(12); // Initial update for 12:00
+                    document.getElementById('loading').style.display = 'none';
                 })
                 .catch(error => {
                     console.error('Error loading or parsing JSON:', error);
+                    document.getElementById('loading').innerText = 'Error loading data. Please try again later.';
                 });
         }
 
-        // Call the function to load the JSON data and generate the heatmap
+        function updateHeatmap(hour) {
+            if (heatLayer) {
+                map.removeLayer(heatLayer);
+            }
+
+            let heatData = trafficData.map(entry => {
+                let [lat, lon] = entry["Geo Point"].split(", ").map(Number);
+                let count = parseFloat(entry[`h${hour.toString().padStart(2, '0')}`]) || 0;
+                return [lat, lon, count];
+            });
+
+            heatLayer = L.heatLayer(heatData, {
+                radius: 25,
+                blur: 15,
+                maxZoom: 17,
+                max: Math.max(...heatData.map(d => d[2])),
+                gradient: {0.4: 'blue', 0.65: 'lime', 1: 'red'}
+            }).addTo(map);
+        }
+
+        document.getElementById('time-slider').addEventListener('input', function(e) {
+            let hour = parseInt(e.target.value);
+            updateHeatmap(hour);
+            document.getElementById('time-display').textContent = `${hour.toString().padStart(2, '0')}:00`;
+        });
+
         loadJSONData();
     </script>
 </body>
 </html>
-
-
