@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bicycle Traffic Heatmap - Bologna</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <script src="https://unpkg.com/papaparse@5.3.0/papaparse.min.js"></script>
     <style>
         #map {
             height: 600px;
@@ -17,9 +16,9 @@
     <h1>Bicycle Traffic Heatmap - Bologna</h1>
     <div id="map"></div>
 
-    <!-- Leaflet.js -->
+    <!-- Include Leaflet.js -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <!-- Heatmap plugin for Leaflet -->
+    <!-- Include the heatmap plugin for Leaflet -->
     <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
     <script>
@@ -31,35 +30,35 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // Function to load CSV and create heatmap
-        function loadCSVData() {
-            Papa.parse('https://raw.githubusercontent.com/ahmadtahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.csv', {
-    download: true,
-    header: true,
-    complete: function(results) {
-        console.log(results.data);  // Check if the CSV data is loading
-        var heatData = [];
+        // Function to load JSON data and create heatmap
+        function loadJSONData() {
+            fetch('https://raw.githubusercontent.com/AhmadTahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.json')
+                .then(response => response.json())
+                .then(data => {
+                    var heatData = [];
 
-        results.data.forEach(function(row) {
-            var lat = parseFloat(row['Latitude']);
-            var lon = parseFloat(row['Longitude']);
-            var count = parseFloat(row['Totale']);
+                    // Loop through the JSON data
+                    data.forEach(function(entry) {
+                        var lat = parseFloat(entry.latitude);  // Update these key names as per your JSON structure
+                        var lon = parseFloat(entry.longitude);
+                        var count = parseFloat(entry.count);   // Update based on the key for the bicycle count
 
-            if (!isNaN(lat) && !isNaN(lon) && !isNaN(count)) {
-                heatData.push([lat, lon, count]);
-            }
-        });
+                        if (!isNaN(lat) && !isNaN(lon) && !isNaN(count)) {
+                            heatData.push([lat, lon, count]);
+                        }
+                    });
 
-        L.heatLayer(heatData, {radius: 25}).addTo(map);
-    },
-    error: function(err) {
-        console.log("Error loading or parsing CSV: ", err);  // Log any CSV loading errors
-    }
-});
+                    // Add the heatmap layer with the data
+                    L.heatLayer(heatData, {radius: 25}).addTo(map);
+                })
+                .catch(error => {
+                    console.error('Error loading or parsing JSON:', error);
+                });
+        }
 
-
-        // Call the function to load the CSV and generate the heatmap
-        loadCSVData();
+        // Call the function to load the JSON data and generate the heatmap
+        loadJSONData();
     </script>
 </body>
 </html>
+
