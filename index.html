@@ -36,7 +36,7 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-       function loadJSONData() {
+      function loadJSONData() {
     fetch('https://media.githubusercontent.com/media/AhmadTahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.json')
         .then(response => response.json())
         .then(data => {
@@ -53,27 +53,37 @@
 }
 
         function updateHeatmap(hour) {
-            if (heatLayer) {
-                map.removeLayer(heatLayer);
-            }
+    if (heatLayer) {
+        map.removeLayer(heatLayer);
+    }
 
-            let heatData = trafficData.map(entry => {
-                let [lat, lon] = entry["Geo Point"].split(", ").map(Number);
-                let count = parseFloat(entry[`h${hour.toString().padStart(2, '0')}`]) || 0;
+    let heatData = trafficData.map(entry => {
+        if (entry && entry["Geo Point"]) {
+            let [lat, lon] = entry["Geo Point"].split(", ").map(Number);
+            let count = parseFloat(entry[`h${hour.toString().padStart(2, '0')}`]) || 0;
+            if (!isNaN(lat) && !isNaN(lon) && !isNaN(count)) {
                 return [lat, lon, count];
-            });
-
-            console.log(`Heatmap data for hour ${hour}:`, heatData.slice(0, 5));
-            console.log(`Max intensity:`, Math.max(...heatData.map(d => d[2])));
-
-            heatLayer = L.heatLayer(heatData, {
-                radius: 25,
-                blur: 15,
-                maxZoom: 17,
-                max: Math.max(...heatData.map(d => d[2])),
-                gradient: {0.4: 'blue', 0.65: 'lime', 1: 'red'}
-            }).addTo(map);
+            }
         }
+        return null;
+    }).filter(point => point !== null);
+
+    console.log(`Heatmap data for hour ${hour}:`, heatData.slice(0, 5));
+    console.log(`Number of valid data points:`, heatData.length);
+
+    if (heatData.length > 0) {
+        heatLayer = L.heatLayer(heatData, {
+            radius: 25,
+            blur: 15,
+            maxZoom: 17,
+            max: Math.max(...heatData.map(d => d[2])),
+            gradient: {0.4: 'blue', 0.65: 'lime', 1: 'red'}
+        }).addTo(map);
+    } else {
+        console.error("No valid data points for heatmap");
+        document.getElementById('error-message').innerText = "No valid data points for heatmap";
+    }
+}
 
         document.getElementById('time-slider').addEventListener('input', function(e) {
             let hour = parseInt(e.target.value);
