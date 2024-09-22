@@ -3,33 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bologna Bicycle Traffic Heatmap - 24 Hour View</title>
+    <title>Bologna Bicycle Traffic Heatmap - 24 Hour View (Debug)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
         h1 { text-align: center; }
         #map { height: 500px; width: 100%; margin-top: 20px; }
-        #slider-container { 
-            width: 100%; 
-            text-align: center; 
-            margin-top: 20px; 
-        }
+        #slider-container { width: 100%; text-align: center; margin-top: 20px; }
         #time-slider { width: 80%; }
-        #time-display { 
-            font-size: 1.2em; 
-            margin-top: 10px; 
-        }
-        #loading { text-align: center; margin-top: 10px; }
+        #time-display { font-size: 1.2em; margin-top: 10px; }
+        #loading, #error-message { text-align: center; margin-top: 10px; color: red; }
     </style>
 </head>
 <body>
-    <h1>Bologna Bicycle Traffic Heatmap - 24 Hour View</h1>
+    <h1>Bologna Bicycle Traffic Heatmap - 24 Hour View (Debug)</h1>
     <div id="map"></div>
     <div id="slider-container">
         <input type="range" id="time-slider" min="0" max="23" value="12" step="1">
         <div id="time-display">12:00</div>
     </div>
     <div id="loading">Loading data...</div>
+    <div id="error-message"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
@@ -41,7 +35,8 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-function loadJSONData() {
+
+        function loadJSONData() {
             fetch('https://raw.githubusercontent.com/AhmadTahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.json')
                 .then(response => {
                     if (!response.ok) {
@@ -50,8 +45,9 @@ function loadJSONData() {
                     return response.json();
                 })
                 .then(data => {
+                    console.log("Data loaded:", data.slice(0, 5)); // Log first 5 entries
                     trafficData = data;
-                    updateHeatmap(12); // Initial update for 12:00
+                    updateHeatmap(12);
                     document.getElementById('loading').style.display = 'none';
                 })
                 .catch(error => {
@@ -71,6 +67,9 @@ function loadJSONData() {
                 let count = parseFloat(entry[`h${hour.toString().padStart(2, '0')}`]) || 0;
                 return [lat, lon, count];
             });
+
+            console.log(`Heatmap data for hour ${hour}:`, heatData.slice(0, 5));
+            console.log(`Max intensity:`, Math.max(...heatData.map(d => d[2])));
 
             heatLayer = L.heatLayer(heatData, {
                 radius: 25,
