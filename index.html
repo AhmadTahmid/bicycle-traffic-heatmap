@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bicycle Traffic Heatmap - Bologna</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bicycle Traffic Heatmap - Bologna</h1>
+    <div id="map"></div>
+
+    <!-- Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- Heatmap plugin for Leaflet -->
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+    <script>
+        // Initialize the map centered on Bologna
+        var map = L.map('map').setView([44.4949, 11.3426], 13);  // Bologna coordinates
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Heatmap data: [latitude, longitude, intensity (bicycle count)]
+        var heatData = [
+            [44.49378141713027, 11.357107706852387, 179.0],
+            [44.49378141713027, 11.357107706852387, 156.0],
+            [44.49378141713027, 11.357107706852387, 68.0],
+            [44.49378141713027, 11.357107706852387, 37.0],
+            [44.49378141713027, 11.357107706852387, 7.0],
+            // Add more points 
+        ];
+
+        // Create the heatmap layer
+        L.heatLayer(heatData, {radius: 25}).addTo(map);
+    </script>
+</body>
+</html>
