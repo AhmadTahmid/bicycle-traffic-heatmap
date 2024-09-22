@@ -44,12 +44,12 @@
             console.log("Attempting to load CSV data");
             Papa.parse('https://raw.githubusercontent.com/AhmadTahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.csv', {
                 download: true,
+                delimiter: ";", // Ensuring that semi-colons are the CSV delimiter
                 header: true,
-                delimiter: ';',
                 complete: function(results) {
                     trafficData = results.data;
                     console.log("Data loaded, first 5 entries:", trafficData.slice(0, 5));
-                    updateHeatmap(12);  // Load heatmap for hour 12 as default
+                    updateHeatmap(12);
                     document.getElementById('loading').style.display = 'none';
                 },
                 error: function(error) {
