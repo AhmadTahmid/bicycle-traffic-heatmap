@@ -1,3 +1,4 @@
+try {
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,7 +36,7 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-
+console.log("Script loaded, calling loadJSONData");
 function loadJSONData() {
     fetch('https://media.githubusercontent.com/media/AhmadTahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.json')
         .then(response => response.json())
@@ -95,7 +96,10 @@ function updateHeatmap(hour) {
             updateHeatmap(hour);
             document.getElementById('time-display').textContent = `${hour.toString().padStart(2, '0')}:00`;
         });
-
+} catch (error) {
+  console.error("An error occurred:", error);
+  document.getElementById('error-message').innerText = `An error occurred: ${error.message}`;
+}
         loadJSONData();
     </script>
 </body>
