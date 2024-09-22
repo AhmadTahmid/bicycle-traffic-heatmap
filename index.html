@@ -34,31 +34,29 @@
         // Function to load CSV and create heatmap
         function loadCSVData() {
             Papa.parse('https://raw.githubusercontent.com/ahmadtahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.csv', {
-                download: true,
-                header: true,
-                complete: function(results) {
-                    console.log(results.data);  // This will print the parsed CSV data to the console
-                    var heatData = [];
+    download: true,
+    header: true,
+    complete: function(results) {
+        console.log(results.data);  // Check if the CSV data is loading
+        var heatData = [];
 
-                    // Loop through each row in the CSV
-                    results.data.forEach(function(row) {
-                        var lat = parseFloat(row['Latitude']);  // Make sure column names match your CSV
-                        var lon = parseFloat(row['Longitude']);
-                        var count = parseFloat(row['Totale']);
+        results.data.forEach(function(row) {
+            var lat = parseFloat(row['Latitude']);
+            var lon = parseFloat(row['Longitude']);
+            var count = parseFloat(row['Totale']);
 
-                        if (!isNaN(lat) && !isNaN(lon) && !isNaN(count)) {
-                            heatData.push([lat, lon, count]);
-                        }
-                    });
+            if (!isNaN(lat) && !isNaN(lon) && !isNaN(count)) {
+                heatData.push([lat, lon, count]);
+            }
+        });
 
-                    // Add the heatmap layer to the map
-                    L.heatLayer(heatData, {radius: 25}).addTo(map);
-                },
-                error: function(err) {
-                    console.error('Error parsing CSV:', err);
-                }
-            });
-        }
+        L.heatLayer(heatData, {radius: 25}).addTo(map);
+    },
+    error: function(err) {
+        console.log("Error loading or parsing CSV: ", err);  // Log any CSV loading errors
+    }
+});
+
 
         // Call the function to load the CSV and generate the heatmap
         loadCSVData();
