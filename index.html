@@ -41,10 +41,14 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-
-        function loadJSONData() {
-            fetch('https://ahmadtahmid.github.io/bicycle-traffic-heatmap/colonnine-conta-bici.json')
-                .then(response => response.json())
+function loadJSONData() {
+            fetch('https://raw.githubusercontent.com/AhmadTahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     trafficData = data;
                     updateHeatmap(12); // Initial update for 12:00
@@ -52,7 +56,8 @@
                 })
                 .catch(error => {
                     console.error('Error loading or parsing JSON:', error);
-                    document.getElementById('loading').innerText = 'Error loading data. Please try again later.';
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error-message').innerText = `Error loading data: ${error.message}. Please check the console for more details.`;
                 });
         }
 
