@@ -36,11 +36,12 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-      function loadJSONData() {
+function loadJSONData() {
     fetch('https://media.githubusercontent.com/media/AhmadTahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.json')
         .then(response => response.json())
         .then(data => {
-            console.log("Data loaded:", data.slice(0, 5)); // Log first 5 entries
+            console.log("Data loaded, first 5 entries:", JSON.stringify(data.slice(0, 5), null, 2));
+            console.log("Total entries:", data.length);
             trafficData = data;
             updateHeatmap(12);
             document.getElementById('loading').style.display = 'none';
@@ -52,7 +53,7 @@
         });
 }
 
-        function updateHeatmap(hour) {
+function updateHeatmap(hour) {
     if (heatLayer) {
         map.removeLayer(heatLayer);
     }
@@ -63,12 +64,16 @@
             let count = parseFloat(entry[`h${hour.toString().padStart(2, '0')}`]) || 0;
             if (!isNaN(lat) && !isNaN(lon) && !isNaN(count)) {
                 return [lat, lon, count];
+            } else {
+                console.log("Invalid data point:", entry);
             }
+        } else {
+            console.log("Entry missing Geo Point:", entry);
         }
         return null;
     }).filter(point => point !== null);
 
-    console.log(`Heatmap data for hour ${hour}:`, heatData.slice(0, 5));
+    console.log(`Heatmap data for hour ${hour}, first 5 points:`, heatData.slice(0, 5));
     console.log(`Number of valid data points:`, heatData.length);
 
     if (heatData.length > 0) {
