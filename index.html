@@ -32,19 +32,21 @@
 
         // Function to load JSON data and create heatmap
         function loadJSONData() {
-            fetch('https://raw.githubusercontent.com/AhmadTahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.json')
+            fetch('https://raw.githubusercontent.com/AhmadTahmid/bicycle-traffic-data/main/colonnine-conta-bici.json')
                 .then(response => response.json())
                 .then(data => {
                     var heatData = [];
 
                     // Loop through the JSON data
                     data.forEach(function(entry) {
-                        var lat = parseFloat(entry.latitude);  // Update these key names as per your JSON structure
-                        var lon = parseFloat(entry.longitude);
-                        var count = parseFloat(entry.count);   // Update based on the key for the bicycle count
+                        var geoPoint = entry["Geo Point"];  // Access the Geo Point
+                        var totalCount = parseFloat(entry["Totale"]);  // Access the bicycle count
 
-                        if (!isNaN(lat) && !isNaN(lon) && !isNaN(count)) {
-                            heatData.push([lat, lon, count]);
+                        // Split Geo Point into latitude and longitude
+                        var [lat, lon] = geoPoint.split(", ").map(Number);
+
+                        if (!isNaN(lat) && !isNaN(lon) && !isNaN(totalCount)) {
+                            heatData.push([lat, lon, totalCount]);
                         }
                     });
 
@@ -61,4 +63,5 @@
     </script>
 </body>
 </html>
+
 
