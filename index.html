@@ -33,35 +33,28 @@
 
         // Function to load CSV and create heatmap
         function loadCSVData() {
-            Papa.parse('colonnine-conta-bici.csv', {
-                download: true,
-                header: true,
-                complete: function(results) {
-                    var heatData = [];
+           Papa.parse('colonnine-conta-bici.csv', {
+    download: true,
+    header: true,
+    complete: function(results) {
+        console.log(results.data);  // This will print the parsed CSV data to the console
+        var heatData = [];
 
-                    // Loop through each row in the CSV
-                    results.data.forEach(function(row) {
-                        var lat = parseFloat(row['Latitude']);  // Extract latitude
-                        var lon = parseFloat(row['Longitude']);  // Extract longitude
-                        var count = parseFloat(row['Totale']);   // Extract bike count
+        // Loop through each row in the CSV
+        results.data.forEach(function(row) {
+            var lat = parseFloat(row['Latitude']);  // Make sure column names match your CSV
+            var lon = parseFloat(row['Longitude']);
+            var count = parseFloat(row['Totale']);
 
-                        if (!isNaN(lat) && !isNaN(lon) && !isNaN(count)) {
-                            heatData.push([lat, lon, count]);
-                        }
-                    });
+            if (!isNaN(lat) && !isNaN(lon) && !isNaN(count)) {
+                heatData.push([lat, lon, count]);
+            }
+        });
 
-                    // Create the heatmap layer with the parsed CSV data
-                    L.heatLayer(heatData, {radius: 25}).addTo(map);
-                },
-                error: function(err) {
-                    console.error('Error parsing CSV:', err);
-                }
-            });
-        }
-
-        // Call the function to load the CSV and generate the heatmap
-        loadCSVData();
-    </script>
-</body>
-</html>
-
+        // Add the heatmap layer to the map
+        L.heatLayer(heatData, {radius: 25}).addTo(map);
+    },
+    error: function(err) {
+        console.error('Error parsing CSV:', err);
+    }
+});
