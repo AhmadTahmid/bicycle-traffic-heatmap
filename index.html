@@ -1,4 +1,3 @@
-try {
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,6 +28,7 @@ try {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
     <script>
+    try {
         let map = L.map('map').setView([44.4949, 11.3426], 13);
         let heatLayer;
         let trafficData = [];
@@ -36,71 +36,76 @@ try {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-console.log("Script loaded, calling loadJSONData");
-function loadJSONData() {
-    fetch('https://media.githubusercontent.com/media/AhmadTahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.json')
-        .then(response => response.json())
-        .then(data => {
-            console.log("Data loaded, first 5 entries:", JSON.stringify(data.slice(0, 5), null, 2));
-            console.log("Total entries:", data.length);
-            trafficData = data;
-            updateHeatmap(12);
-            document.getElementById('loading').style.display = 'none';
-        })
-        .catch(error => {
-            console.error('Error loading or parsing JSON:', error);
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('error-message').innerText = `Error loading data: ${error.message}. Please check the console for more details.`;
-        });
-}
 
-function updateHeatmap(hour) {
-    if (heatLayer) {
-        map.removeLayer(heatLayer);
-    }
-
-    let heatData = trafficData.map(entry => {
-        if (entry && entry["Geo Point"]) {
-            let [lat, lon] = entry["Geo Point"].split(", ").map(Number);
-            let count = parseFloat(entry[`h${hour.toString().padStart(2, '0')}`]) || 0;
-            if (!isNaN(lat) && !isNaN(lon) && !isNaN(count)) {
-                return [lat, lon, count];
-            } else {
-                console.log("Invalid data point:", entry);
-            }
-        } else {
-            console.log("Entry missing Geo Point:", entry);
+        console.log("Script loaded, calling loadJSONData");
+        
+        function loadJSONData() {
+            console.log("Attempting to load JSON data");
+            fetch('https://media.githubusercontent.com/media/AhmadTahmid/bicycle-traffic-heatmap/main/colonnine-conta-bici.json')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Data loaded, first 5 entries:", JSON.stringify(data.slice(0, 5), null, 2));
+                    console.log("Total entries:", data.length);
+                    trafficData = data;
+                    updateHeatmap(12);
+                    document.getElementById('loading').style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error loading or parsing JSON:', error);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error-message').innerText = `Error loading data: ${error.message}. Please check the console for more details.`;
+                });
         }
-        return null;
-    }).filter(point => point !== null);
 
-    console.log(`Heatmap data for hour ${hour}, first 5 points:`, heatData.slice(0, 5));
-    console.log(`Number of valid data points:`, heatData.length);
+        function updateHeatmap(hour) {
+            if (heatLayer) {
+                map.removeLayer(heatLayer);
+            }
 
-    if (heatData.length > 0) {
-        heatLayer = L.heatLayer(heatData, {
-            radius: 25,
-            blur: 15,
-            maxZoom: 17,
-            max: Math.max(...heatData.map(d => d[2])),
-            gradient: {0.4: 'blue', 0.65: 'lime', 1: 'red'}
-        }).addTo(map);
-    } else {
-        console.error("No valid data points for heatmap");
-        document.getElementById('error-message').innerText = "No valid data points for heatmap";
-    }
-}
+            let heatData = trafficData.map(entry => {
+                if (entry && entry["Geo Point"]) {
+                    let [lat, lon] = entry["Geo Point"].split(", ").map(Number);
+                    let count = parseFloat(entry[`h${hour.toString().padStart(2, '0')}`]) || 0;
+                    if (!isNaN(lat) && !isNaN(lon) && !isNaN(count)) {
+                        return [lat, lon, count];
+                    } else {
+                        console.log("Invalid data point:", entry);
+                    }
+                } else {
+                    console.log("Entry missing Geo Point:", entry);
+                }
+                return null;
+            }).filter(point => point !== null);
+
+            console.log(`Heatmap data for hour ${hour}, first 5 points:`, heatData.slice(0, 5));
+            console.log(`Number of valid data points:`, heatData.length);
+
+            if (heatData.length > 0) {
+                heatLayer = L.heatLayer(heatData, {
+                    radius: 25,
+                    blur: 15,
+                    maxZoom: 17,
+                    max: Math.max(...heatData.map(d => d[2])),
+                    gradient: {0.4: 'blue', 0.65: 'lime', 1: 'red'}
+                }).addTo(map);
+            } else {
+                console.error("No valid data points for heatmap");
+                document.getElementById('error-message').innerText = "No valid data points for heatmap";
+            }
+        }
 
         document.getElementById('time-slider').addEventListener('input', function(e) {
             let hour = parseInt(e.target.value);
             updateHeatmap(hour);
             document.getElementById('time-display').textContent = `${hour.toString().padStart(2, '0')}:00`;
         });
-} catch (error) {
-  console.error("An error occurred:", error);
-  document.getElementById('error-message').innerText = `An error occurred: ${error.message}`;
-}
+
         loadJSONData();
+    } catch (error) {
+        console.error("An error occurred:", error);
+        document.getElementById('error-message').innerText = `An error occurred: ${error.message}`;
+    }
     </script>
 </body>
 </html>
+
