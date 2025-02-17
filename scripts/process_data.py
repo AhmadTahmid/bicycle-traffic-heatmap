@@ -1,10 +1,10 @@
 import pandas as pd
 
 def load_and_process_data(input_file, output_file):
-    # Load the dataset
+   
     dataset = pd.read_csv(input_file, sep=';')
     
-    # Clean and process the data
+    
     dataset_clean = dataset.dropna(subset=['Geo Point'])
 
     # Split Geo Point into Latitude and Longitude
